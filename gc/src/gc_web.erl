@@ -25,6 +25,15 @@ loop(Req, DocRoot) ->
     case Req:get(method) of
         Method when Method =:= 'GET'; Method =:= 'HEAD' ->
             case Path of
+		"test" ->
+		    Sys_at = now(),
+		    {ok, Ip={A, B, C, D}} = inet_parse:address(Req:get(peer)),
+		    Ipcode = A*256*256*256+B*256*256+C*256+D,
+		    
+		    QueryStringList = [{list_to_atom(Key), Val} || {Key,Val}<- gc_req:get_qs(Req)],
+		    List = [{sys_at, Sys_at}, {ip, Ip}, {ipcode, Ipcode} | QueryStringList],
+		    {ok, Handle} = dets:open_file("./data/test.log"),
+		    dets:insert(Handle, List);
                 _ ->
                     Req:serve_file(Path, DocRoot)
             end;
@@ -41,6 +50,10 @@ loop(Req, DocRoot) ->
 
 get_option(Option, Options) ->
     {proplists:get_value(Option, Options), proplists:delete(Option, Options)}.
+
+
+
+
 
 
 %%

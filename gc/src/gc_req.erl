@@ -1,0 +1,115 @@
+%%% File    : bte_misc.erl
+%%% Author  : Simon <simon@ibm>
+%%% Description : 杂七杂八的函数。
+%%% Created : 16 Dec 2009 by Simon <simon@ibm>
+
+-module(gc_req).
+
+-export([parse_qs/1, get_global/6, get_first_defined/1, get_ip/1, get_ipc/1, get_qs/1]).
+
+
+%% @spec parse_qs(RawPath) -> [{Key, Value}]
+%% @doc no.
+parse_qs(RawPath) ->
+    {_, QueryString} = urlsplit_hat_path(RawPath),
+    parse_hat_qs(QueryString).
+
+
+%% @spec urlsplit_hat_path(Url) -> {Path, Rest}
+%% @doc Return a 3-tuple, does not expand % escapes. Only supports HTTP style
+%%      paths.
+urlsplit_hat_path(Path) ->
+    urlsplit_hat_path(Path, []).
+
+urlsplit_hat_path("", Acc) ->
+    {lists:reverse(Acc), ""};
+urlsplit_hat_path([$?, $_, $h, $a, $_ | Rest], Acc) ->
+    {lists:reverse(Acc), Rest};
+urlsplit_hat_path([C | Rest], Acc) ->
+    urlsplit_hat_path(Rest, [C | Acc]).
+
+%% @spec parse_hat_qs(string() | binary()) -> [{Key, Value}]
+%% @doc Parse a query string or application/x-www-form-urlencoded.
+parse_hat_qs(Binary) when is_binary(Binary) ->
+    parse_hat_qs(binary_to_list(Binary));
+parse_hat_qs(String) ->
+    parse_hat_qs(String, []).
+
+parse_hat_qs([], Acc) ->
+    lists:reverse(Acc);
+parse_hat_qs(String, Acc) ->
+    {Key, Rest} = parse_hat_qs_key(String),
+    {Value, Rest1} = parse_hat_qs_value(Rest),
+    parse_hat_qs(Rest1, [{Key, Value} | Acc]).
+
+
+parse_hat_qs_key(String) ->
+    parse_hat_qs_key(String, []).
+
+parse_hat_qs_key([], Acc) ->
+    {lists:reverse(Acc), ""};
+parse_hat_qs_key([$= | Rest], Acc) ->
+    {lists:reverse(Acc), Rest};
+parse_hat_qs_key([C | Rest], Acc) ->
+    parse_hat_qs_key(Rest, [C | Acc]).
+
+
+parse_hat_qs_value(String) ->
+    parse_hat_qs_value(String, []).
+
+parse_hat_qs_value([], Acc) ->
+    {lists:reverse(Acc), ""};
+parse_hat_qs_value([$&, $_, $h, $a, $_ | Rest], Acc) ->
+    {lists:reverse(Acc), Rest};
+parse_hat_qs_value([C | Rest], Acc) ->
+    parse_hat_qs_value(Rest, [C | Acc]).
+
+%%--------------------------------------------------------------------
+%% Func: get_ip(Req) -> [IP]
+%% Description: 取得客户端IP
+%%--------------------------------------------------------------------
+get_ip(Req)->
+    {ok, IP} = inet_parse:address(Req:get(peer)),%%取得客户端ip地址
+    IP.
+
+get_ipc({A,B,C,D})->
+    A*256*256*256 + B*256*256 + C*256 + D.
+
+get_global(GFVIC,GIPIC,DFVIC,DIPIC,VIC,IPC)->
+    FVIC = get_first_defined([GFVIC,DFVIC]),
+    IPIC = get_first_defined([GIPIC,DIPIC]),
+    case {FVIC, IPIC} of
+        {undefined,undefined} ->
+            {new, VIC, IPC};
+        {"-","-"} ->
+            {new, VIC, IPC};
+        {undefined,_} ->
+            {new, VIC, IPIC};
+        {"-",_} ->
+            {new, VIC, IPIC};
+        {_,undefined} ->
+            {new, FVIC, IPC};
+        {_,"-"} ->
+            {new, FVIC, IPC};
+        _Other->
+            {old, FVIC, IPIC}
+    end.
+            
+get_first_defined(List) ->
+    get_first_defined(List, undefined).
+
+get_first_defined([H|T], undefined)->
+    get_first_defined(T, H);
+get_first_defined(_, Val)->
+    Val.
+
+
+%%--------------------------------------------------------------------
+%% Func: get_qs(Req) -> [{QueryName, QueryValue}]
+%% Description: 取得queryString参数列表
+%%--------------------------------------------------------------------
+get_qs(Rawpath) when is_list(Rawpath)->
+    parse_qs(Rawpath);%%取得queryString参数列表
+get_qs(Req)->
+    parse_qs(Req:get(raw_path)).%%取得queryString参数列表
+
