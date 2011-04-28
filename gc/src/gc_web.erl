@@ -21,11 +21,14 @@ stop() ->
     mochiweb_http:stop(?MODULE).
 
 loop(Req, DocRoot) ->
-    "/" ++ Path = Req:get(path),
+    io:format("data received!~n"),
+    "/" ++ Path = Req:get(path),%[]
+    io:format("data received path = ~p!~n", [Req:get(method)]),
     case Req:get(method) of
         Method when Method =:= 'GET'; Method =:= 'HEAD' ->
             case Path of
-		"test" ->
+		"test.gif" ->
+		    io:format("data test.gif!~n"),
 		    Sys_at = now(),
 		    {ok, Ip={A, B, C, D}} = inet_parse:address(Req:get(peer)),
 		    Ipcode = A*256*256*256+B*256*256+C*256+D,
@@ -59,6 +62,6 @@ get_option(Option, Options) ->
 %%
 %% Tests
 %%
--include_lib("eunit/include/eunit.hrl").
 -ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
 -endif.
