@@ -31,9 +31,9 @@ loop(Req, DocRoot) ->
             case Path of
 		"gc.gif" ->
 		    Sys_at = now(),
-		    IP = gc_req:get_ip(Req),
+		    Ip = gc_req:get_ip(Req),
 		    Ipcode = gc_req:get_ipc(Req),
-		    Qslist = [{list_to_atom(Key), Val} || {Key, Val{ <- gc_req:get_qs(Req)],
+		    Qslist = [{list_to_atom(Key), Val} || {Key, Val} <- gc_req:get_qs(Req)],
 		    List = [{sys_at, Sys_at}, {ip, Ip}, {ipcode, Ipcode} | Qslist],
 		    gc_record:save(List);
 		"test.gif" ->
