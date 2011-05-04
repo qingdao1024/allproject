@@ -6,6 +6,8 @@
 -module(gc_web).
 -author('author <author@example.com>').
 
+-define(PRINT(Msg), io:format("Mod:~p, Line:~p, Msg:~p~n", [?MODULE, ?LINE, Msg])).
+
 -export([start/1, stop/0, loop/2]).
 
 %% External API
@@ -21,21 +23,22 @@ stop() ->
     mochiweb_http:stop(?MODULE).
 
 loop(Req, DocRoot) ->
-    io:format("data received!~n"),
+    %io:format("data received!~n"),
     "/" ++ Path = Req:get(path),%[]
-    io:format("data received path = ~p!~n", [Req:get(method)]),
+   % io:format("data received path = ~p!~n", [Req:get(method)]),
     case Req:get(method) of
         Method when Method =:= 'GET'; Method =:= 'HEAD' ->
             case Path of
 		"test.gif" ->
-		    io:format("data test.gif!~n"),
+		    io:format("test!~n"),
 		    Sys_at = now(),
 		    {ok, Ip={A, B, C, D}} = inet_parse:address(Req:get(peer)),
 		    Ipcode = A*256*256*256+B*256*256+C*256+D,
-		    
+		    ?PRINT(Ip),
 		    QueryStringList = [{list_to_atom(Key), Val} || {Key,Val}<- gc_req:get_qs(Req)],
 		    List = [{sys_at, Sys_at}, {ip, Ip}, {ipcode, Ipcode} | QueryStringList],
-		    {ok, Handle} = dets:open_file("./data/test.log"),
+		    ?PRINT(List),
+		    {ok, Handle} = dets:open_file("./data/test.log",[{keypos, 1}]),
 		    dets:insert(Handle, List);
                 _ ->
                     Req:serve_file(Path, DocRoot)
