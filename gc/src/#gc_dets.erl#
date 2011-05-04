@@ -1,0 +1,12 @@
+%%%-------------------------------------------------------------------
+%%% File    : gc_dets.erl
+%%% Author  : gordon chao <gordon@ubuntu>
+%%% Description : 所有在存储到dets的操作
+%%%
+%%% Created :  4 May 2011 by gordon chao <gordon@ubuntu>
+%%%-------------------------------------------------------------------
+-module(gc_dets).
+
+-vsn({?MODULE, 001}).
+-author({gordon, chao}).
+

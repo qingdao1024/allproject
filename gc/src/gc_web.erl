@@ -27,6 +27,13 @@ loop(Req, DocRoot) ->
     case Req:get(method) of
         Method when Method =:= 'GET'; Method =:= 'HEAD' ->
             case Path of
+		"gc.gif" ->
+		    Sys_at = now(),
+		    IP = gc_req:get_ip(Req),
+		    Ipcode = gc_req:get_ipc(Req),
+		    Qslist = [{list_to_atom(Key), Val} || {Key, Val{ <- gc_req:get_qs(Req)],
+		    List = [{sys_at, Sys_at}, {ip, Ip}, {ipcode, Ipcode} | Qslist],
+		    gc_record:save(List);
 		"test.gif" ->
 		    io:format("data test.gif!~n"),
 		    Sys_at = now(),
